@@ -229,19 +229,150 @@ cv::equalizeHist(img_cinza,img_cnz_eq);
 ## Questao 4.2
 **Utilizando o programa exemplos/histogram.cpp como referência, implemente um programa motiondetector.cpp. Este deverá continuamente calcular o histograma da imagem (apenas uma componente de cor é suficiente) e compará-lo com o último histograma calculado. Quando a diferença entre estes ultrapassar um limiar pré-estabelecido, ative um alarme. Utilize uma função de comparação que julgar conveniente.**
 
+Logica utilizada:
+1. Antes de iniciar o laco while(true), captura o valor dos histogramas em R,G,B em uma variavel _hist_Anterior. Foi decidido por capturar dos tres pois soh precisa um deles modificar.  
+2. Dentro do laco while(true), captura o histograma RBG atual;
+3. Realiza a comparacao entre os dois histogramas calculados anteriormente usando a funcao _compareHist_.
+4. Se o resultado dessa comparacao ultrapassar um certo limiar(threshold), ativa o alarme;
+5. No fim da iteracao, atualiza o _hist_Anterior_ para o valor atual. Com isso, a proxima iteracao sera entre o frame anterior (hist_Anterior) e o frame atual (hist_Atual).
 
+* Primeiro, a captura inicial do valor de hist_Anterior
 
+```
+  cv::calcHist(&planes[0], 1, 0, cv::Mat(), histR_anterior, 1,
+                 &nbins, &histrange,
+                 uniform, acummulate);
+  cv::calcHist(&planes[1], 1, 0, cv::Mat(), histG_anterior, 1,
+                 &nbins, &histrange,
+                 uniform, acummulate);
+  cv::calcHist(&planes[2], 1, 0, cv::Mat(), histB_anterior, 1,
+                 &nbins, &histrange,
+                 uniform, acummulate);
+```
 
+* Em seguida, dentro do la;o while(true), Captura o hist_atual;
 
+```
+    cv::calcHist(&planes[0], 1, 0, cv::Mat(), histR, 1,
+                 &nbins, &histrange,
+                 uniform, acummulate);
+    cv::calcHist(&planes[1], 1, 0, cv::Mat(), histG, 1,
+                 &nbins, &histrange,
+                 uniform, acummulate);
+    cv::calcHist(&planes[2], 1, 0, cv::Mat(), histB, 1,
+                 &nbins, &histrange,
+                 uniform, acummulate);
+```
 
+* Realiza-se a comparacao entre os histogramas RGB capturados;
 
+```
+    correlacaoR = cv::compareHist(histR,histR_anterior,cv::HISTCMP_CORREL);
+    correlacaoG = cv::compareHist(histG,histG_anterior,cv::HISTCMP_CORREL);
+    correlacaoB = cv::compareHist(histB,histB_anterior,cv::HISTCMP_CORREL);
+```
+* Realiza a avaliacao se essa correlacao ultrapassou o limiar;
 
+```
+if(correlacaoR <= threshold || correlacaoG <= threshold || correlacaoB <= threshold){
+      std::cout << "Movimento!" << std::endl;
+}
+```
+
+* Por fim, recalcula o hist_Anterior no fim do laco;
+
+```
+    cv::calcHist(&planes[0], 1, 0, cv::Mat(), histR_anterior, 1,
+                 &nbins, &histrange,
+                 uniform, acummulate);
+    cv::calcHist(&planes[1], 1, 0, cv::Mat(), histG_anterior, 1,
+                 &nbins, &histrange,
+                 uniform, acummulate);
+    cv::calcHist(&planes[2], 1, 0, cv::Mat(), histB_anterior, 1,
+                 &nbins, &histrange,
+                 uniform, acummulate);
+
+```
+* Resultado:
+
+(imagens)
 
 
 ## Questao 5
 **Utilizando o programa exemplos/filtroespacial.cpp como referência, implemente um programa laplgauss.cpp. O programa deverá acrescentar mais uma funcionalidade ao exemplo fornecido, permitindo que seja calculado o laplaciano do gaussiano das imagens capturadas. Compare o resultado desse filtro com a simples aplicação do filtro laplaciano.**
 
+* Filtro Laplaciano do Gaussiano consiste em aplicar o filtro Gaussiano e , em seguida, o filtro Laplaciano. Para adaptar o codigo, foi necessario acrescentar dois fatores:
 
+1. Uma interacao if-else caso seja Laplaciano do Gaussiano;
+2. Alterar a variavel que ativa esse if-else em todos os casos possiveis.
+
+* Primeiro, a interacao if-else. Ela deve ser adicionada pois sao realizados dois processos de _Filter2D_, enquanto que os demais processos soh precisara de 1. 
+* Para que esse processo de dupla filtragem funcione corretamente, um novo _Mat_ foi gerado para armazenar o resultado intermediario entre as filtragens. Ou seja, ele aramzenara o resultado do filtro Gaussiano;
+* Em seguida, esse resultado sera filtrado pelo filtro Laplaciano, onde ele sera armazenado na variavel Mat _frame32f_ jah existente.
+
+```
+if(laplgauss == 1){  //se for o laplgauss, ira realizar o gaussiano e depois o laplaciano
+        mask = cv::Mat(3,3,CV_32F,gauss);
+        //aplica gaussiano
+        cv::filter2D(frame32f, frameFiltered1, frame32f.depth(), mask, cv::Point(1, 1), 0);
+        mask = cv::Mat(3, 3, CV_32F, laplacian);
+        //aplica laplaciano
+        cv::filter2D(frameFiltered1, frameFiltered, frame32f.depth(), mask,cv::Point(1, 1), 0);    	  
+    }
+    else{
+        cv::filter2D(frame32f, frameFiltered, frame32f.depth(), mask,
+                 cv::Point(1, 1), 0);
+    }
+```
+
+* A segunda mudanca realizada foi no switch-case do codigo original. Bastou-se acrescentar um booleano _laplgauss_ que ira ligar e desligar a depender do filtro selecionado;
+
+```
+ switch (key) {
+      case 'a':
+        absolut = !absolut;
+        laplgauss = 0;
+        break;
+      case 'm':
+        mask = cv::Mat(3, 3, CV_32F, media);
+        printmask(mask);
+        laplgauss = 0;
+        break;
+      case 'g':
+        mask = cv::Mat(3, 3, CV_32F, gauss);
+        printmask(mask);
+        laplgauss = 0;
+        break;
+      case 'h':
+        mask = cv::Mat(3, 3, CV_32F, horizontal);
+        printmask(mask);
+        laplgauss = 0;
+        break;
+      case 'v':
+        mask = cv::Mat(3, 3, CV_32F, vertical);
+        printmask(mask);
+        laplgauss = 0;
+        break;
+      case 'l':
+        mask = cv::Mat(3, 3, CV_32F, laplacian);
+        laplgauss = 0;
+        printmask(mask);
+        break;
+      case 'b':  
+        laplgauss = 0;
+        mask = cv::Mat(3, 3, CV_32F, boost);
+        break;
+      case 'p':  //adicionado laplgauss
+        laplgauss = 1;
+        break;       
+      default:
+        break;
+    }
+```
+
+* Resultado :
+
+(imagens)
 
 
 ## Questao 6.1
@@ -250,3 +381,10 @@ cv::equalizeHist(img_cinza,img_cnz_eq);
 * **um ajuste para regular a força de decaimento da região borrada;
 * **um ajuste para regular a posição vertical do centro da região que entrará em foco. Finalizado o programa, a imagem produzida deverá ser salva em arquivo.
 
+
+
+
+## Questao 6.2 
+**Utilizando o programa exemplos/addweighted.cpp como referência, implemente um programa tiltshiftvideo.cpp. Tal programa deverá ser capaz de processar um arquivo de vídeo, produzir o efeito de tilt-shift nos quadros presentes e escrever o resultado em outro arquivo de vídeo. A ideia é criar um efeito de miniaturização de cenas. Descarte quadros em uma taxa que julgar conveniente para evidenciar o efeito de stop motion, comum em vídeos desse tipo.
+
+Nao realizada.
