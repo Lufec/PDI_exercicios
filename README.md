@@ -377,11 +377,175 @@ if(laplgauss == 1){  //se for o laplgauss, ira realizar o gaussiano e depois o l
 
 ## Questao 6.1
 **Utilizando o programa exemplos/addweighted.cpp como referência, implemente um programa tiltshift.cpp. Três ajustes deverão ser providos na tela da interface:**
-* **um ajuste para regular a altura da região central que entrará em foco;
-* **um ajuste para regular a força de decaimento da região borrada;
-* **um ajuste para regular a posição vertical do centro da região que entrará em foco. Finalizado o programa, a imagem produzida deverá ser salva em arquivo.
+* **um ajuste para regular a altura da região central que entrará em foco;**
+* **um ajuste para regular a força de decaimento da região borrada;**
+* **um ajuste para regular a posição vertical do centro da região que entrará em foco. Finalizado o programa, a imagem produzida deverá ser salva em arquivo.**
 
+Essa questao foi dividida em diversos problemas:
+1. Gerar copia da imagem original, porem borrada;
+2. Calcular Valor de alpha usando a funcao α(x)=12(tanh((x−l1)/d)−tanh(x−l2)/d)), onde os parametros l1, l2 e d devem ser calculados a partir da altura da regiao central (banda), da forca de decaimento (d) e da posicao do centro da imagem (x0)
+3. Gerar as Matrizes de alpha1 e alpha2 respectivas para ambas imagens;
+4. Gerar a imagem de tiltshift usando essas matrizes alphas e as imagens original e borrada;
+5. Adaptar as ferramentas de slider para atender as exigencias do problema.
 
+* Para gerar o tiltshift, eh preciso produzir uma copia da imagem original, porem borrada. Para isso, um metodo possivel seria usar o filtro da media por uma serie de vezes seguidas. O metodo utilizado foi chamando a funcao de _GaussianBlur_ para borrar a imagem.
+
+```
+cv::GaussianBlur(image1,image2,cv::Size(5,5),5.0,5.0);
+```
+Comparacao das duas imagens:
+(imagens..)
+
+* O calculo de alpha foi codificado separadamente, seguindo as exigencias da funcao desejada.
+
+```
+float alpha(float ponto,float x0, float b,float d){
+
+  float a = 0.5*(tanhf((ponto-(x0+(b/2)))/d)-tanhf((ponto-(x0-(b/2)))/d));
+  return a;
+}
+```
+Onde _ponto_ eh a posicao atual, _x0_ eh o centro da posicao vertical escolhida pelo slider, _b_ eh o tamanho da regiao de banda e _d_ eh o decaimento.
+
+* Geracao das matrizes alpha1 e alpha2, onde alpha 2 eh o complemento de alpha1. 
+```
+  matriz_alfa1 = cv::Mat::zeros(altura,largura,CV_32F);
+  matriz_alfa2 = cv::Mat::zeros(altura,largura,CV_32F);
+  
+  for(int i=0;i<altura;i++){ 
+      alfa1 = alpha(i,x0,band,decaimento);	
+      alfa2 = 1.0 - alfa1;
+
+      for(int j=0;j<largura;j++){
+          matriz_alfa1.at<float>(i,j) = alfa1;
+          matriz_alfa2.at<float>(i,j) = alfa2;
+      }
+  }
+```
+* Em seguida, essas matrizes foram replicadas e foram unidas, uma vez que torna-se necessario para nao ocorrer erros do tipo "arithmetic" na execucao.
+
+```
+  cv::Mat aux1[] = {matriz_alfa1, matriz_alfa1, matriz_alfa1};
+  cv::Mat aux2[] = {matriz_alfa2, matriz_alfa2, matriz_alfa2};
+  cv::merge(aux1, 3, matriz_alfa1);
+  cv::merge(aux2, 3, matriz_alfa2);
+```
+* Sao geradas matrizes auxiliares para realizar a operacao de tiltshift e elas receberao as imagens original (1) e borrada (2) no formato Float de 3 canais (RGB).
+
+```
+  cv::Mat copia1, copia2, result_32fc;
+  image1.convertTo(copia1, CV_32FC3);
+  image2.convertTo(copia2, CV_32FC3);
+```
+
+* Multiplica as matrizes alphas pelas imagens original e borrada do tipo float
+
+```
+  cv::multiply(copia1, matriz_alfa1, copia1);
+  cv::multiply(copia2, matriz_alfa2, copia2);
+  
+```
+* Soma os resultados
+
+```
+  cv::add(copia1, copia2, result_32fc);
+  result_32fc.convertTo(blended, CV_8UC3);
+  
+```
+* E realiza o display e escrita das imagens original, borrada e tiltshift. Essa ultima sera salva em arquivo jpg.
+
+```
+  cv::imshow("imagem original", image1);
+  cv::imshow("borrada", image2);
+  cv::imshow("tiltshift", blended);
+  cv::imwrite("tiltshift.jpg",blended);
+```
+
+* A funcao final que realiza o tiltshift eh a uniao de todos esses trechos ilustrados.
+
+```
+  matriz_alfa1 = cv::Mat::zeros(altura,largura,CV_32F);
+  matriz_alfa2 = cv::Mat::zeros(altura,largura,CV_32F);
+  for(int i=0;i<altura;i++){ 
+      alfa1 = alpha(i,x0,band,decaimento);	
+      alfa2 = 1.0 - alfa1;
+      for(int j=0;j<largura;j++){
+          matriz_alfa1.at<float>(i,j) = alfa1;
+          matriz_alfa2.at<float>(i,j) = alfa2;
+      }
+  }
+  cv::Mat aux1[] = {matriz_alfa1, matriz_alfa1, matriz_alfa1};
+  cv::Mat aux2[] = {matriz_alfa2, matriz_alfa2, matriz_alfa2};
+  cv::merge(aux1, 3, matriz_alfa1);
+  cv::merge(aux2, 3, matriz_alfa2);
+
+  cv::Mat copia1, copia2, result_32fc;
+  image1.convertTo(copia1, CV_32FC3);
+  image2.convertTo(copia2, CV_32FC3);
+  cv::multiply(copia1, matriz_alfa1, copia1);
+  cv::multiply(copia2, matriz_alfa2, copia2);
+  cv::add(copia1, copia2, result_32fc);
+  result_32fc.convertTo(blended, CV_8UC3);
+  cv::imshow("imagem original", image1);
+  cv::imshow("borrada", image2);
+  cv::imshow("tiltshift", blended);
+  cv::imwrite("tiltshift.jpg",blended);
+```
+
+* Resta agora adaptar o visual dos sliders para eles modificarem os valores de x0,band e decaimento, alem de chamarem a funcao de tiltshift.
+
+```
+void on_trackbar_x0(int, void*){
+ x0 = (double) slider_x0*altura/slider_x0_max ;
+ std::cout<<"x0"<<x0<<std::endl;
+ montagem_de_tiltshift();
+ cv::imshow("addweighted", blended);
+}
+
+void on_trackbar_band(int, void*){
+ band = (double) band_slider*altura/band_slider_max ;
+ std::cout<<"band"<<band<<std::endl;
+ montagem_de_tiltshift();
+ cv::imshow("addweighted", blended);
+}
+
+void on_trackbar_d(int, void*){
+ decaimento = (double) d_slider;
+ std::cout<<"decaimento"<<decaimento<<std::endl;
+ montagem_de_tiltshift();
+ cv::imshow("addweighted", blended);
+}
+
+```
+* Com isso, a mudanca final foi no codigo main() para receber essas trackbars.
+
+```
+ cv::namedWindow("tiltshift", 1);
+  std::sprintf( TrackbarName, "x0 x %d", slider_x0_max );
+  cv::createTrackbar( TrackbarName, "tiltshift",
+                      &slider_x0,
+                      slider_x0_max,
+                      on_trackbar_x0 );
+  on_trackbar_x0(slider_x0, 0 );
+  
+  std::sprintf( TrackbarName, "band x %d", band_slider_max );
+  cv::createTrackbar( TrackbarName, "tiltshift",
+                      &band_slider,
+                      band_slider_max,
+                      on_trackbar_band );
+  on_trackbar_band(band_slider, 0 );
+  
+  std::sprintf( TrackbarName, "d x %d", d_slider_max );
+  cv::createTrackbar( TrackbarName, "tiltshift",
+                      &d_slider,
+                      d_slider_max,
+                      on_trackbar_d );
+  on_trackbar_d(d_slider, 0 );
+```
+
+* Resultado final:
+
+(imagens...)
 
 
 ## Questao 6.2 
