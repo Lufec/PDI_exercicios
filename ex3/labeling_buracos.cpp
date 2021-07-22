@@ -67,7 +67,10 @@ int main(int argc, char** argv){
         cv::floodFill(image,p,0);
       }
     }
-       
+    
+  cv::imwrite("Imagem_sem_bordas.png", image);    
+  
+  
   //zera posicao para origem novamente
   p.x=0;
   p.y=0;
@@ -89,12 +92,16 @@ int main(int argc, char** argv){
     }
   }
  
+  cv::imwrite("Imagem_stodos.png", image);    
+  
   // inverte cor de fundo para 255. Com isso, interior das bolhas furadas sera 0.
   
   //volta posicao pra origem
   p.x = 0; 
   p.y = 0;
   cv::floodFill(image,p,255);
+  
+  cv::imwrite("Imagem_inverte.png", image);    
   
   // Contagem de objetos furados
   int nobjects_furos = 0;
@@ -110,6 +117,8 @@ int main(int argc, char** argv){
     }
   }
 
+  cv::imwrite("Imagem_final.png", image);    
+  
   int nobjects_inteiro = nobjects - nobjects_furos;
 
   std::cout << " Sao " << nobjects_furos << " bolhas com furos \n";

@@ -1,8 +1,6 @@
 #include <iostream>
 #include <opencv2/opencv.hpp>
 
-using namespace cv;
-using namespace std;
 
 int main(int, char**){
   cv::Mat image;
@@ -37,22 +35,19 @@ int main(int, char**){
 
   for(int i=P1x;i<P2x;i++){
     for(int j=P1y;j<P2y;j++){
-    	
-    	//pega valor de cor no pixel
-    	
-    	Vec3b cor = image.at<Vec3b>(i,j);
-    	
+    	//pega valor de cor no pixel 	
+    	cv::Vec3b cor = image.at<Vec3b>(i,j);   	
     	//inverte pixel
     	cor.val[0] = 255 - cor.val[0];
     	cor.val[1] = 255 - cor.val[1];
-    	cor.val[2] = 255 - cor.val[2];
-    
+    	cor.val[2] = 255 - cor.val[2];  
         //reescreve ele na posicao 
 	image.at<Vec3b>(i,j) = cor;
     }
   }
 
   cv::imshow("janela", image);
+  cv::imwrite("inverte.png",image);
   cv::waitKey();
   return 0;
 }

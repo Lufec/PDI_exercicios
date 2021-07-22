@@ -2,8 +2,6 @@
 #include <opencv2/opencv.hpp>
 #include <algorithm>    // std::min and std::max
 
-using namespace cv;
-using namespace std;
 
 int main(int argc, char** argv){
   cv::Mat image;
@@ -57,10 +55,11 @@ int main(int argc, char** argv){
   
   // chamada da janela
   
-  namedWindow("janela",WINDOW_AUTOSIZE);
-  imshow("janela", img_trocada);
+  cv::namedWindow("janela",cv::WINDOW_AUTOSIZE);
+  cv::imshow("janela", img_trocada);
+    cv::imwrite("janela_troca.png", img_trocada);
 
-  waitKey();
+  cv::waitKey();
 
 
   return 0;
