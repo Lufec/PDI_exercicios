@@ -32,7 +32,10 @@ Usando como refer"encia o pixels.cpp, foram realizados os seguintes acrescimos:
 ```
 * Apos modificar os pixels, a imagem foi salva usando imwrite.
 
-(inserir as duas imagens)
+![biel](https://user-images.githubusercontent.com/30414428/126574816-e326ed52-5c04-463e-8811-344ee377a329.png)
+![inverte](https://user-images.githubusercontent.com/30414428/126574817-20faa700-dcc1-4422-a854-6f0eb0edc545.png)
+
+
 
 
 ## Questao 2.2
@@ -67,8 +70,9 @@ Usando como refer"encia o pixels.cpp, foram realizados os seguintes acrescimos:
   Q4.copyTo(img_trocada(Q1_rect));    //Q4->Q1
 ```
 Resultado:
+![biel](https://user-images.githubusercontent.com/30414428/126575192-af3048ec-7ba3-4ab2-bb4f-b82210a05129.png)
+![janela_troca](https://user-images.githubusercontent.com/30414428/126575193-a788903a-2ea9-42d9-95ea-86977423aae2.png)
 
-(imagens)
 
 ## Questao 3.1
 **Observando-se o programa labeling.cpp como exemplo, é possível verificar que caso existam mais de 255 objetos na cena, o processo de rotulação poderá ficar comprometido. Identifique a situação em que isso ocorre e proponha uma solução para este problema.**
@@ -99,6 +103,9 @@ Resultado:
 
 ## Questao 3.2 
 **Aprimore o algoritmo de contagem apresentado para identificar regiões com ou sem buracos internos que existam na cena. Assuma que objetos com mais de um buraco podem existir. Inclua suporte no seu algoritmo para não contar bolhas que tocam as bordas da imagem. Não se pode presumir, a priori, que elas tenham buracos ou não.**
+
+![bolhas](https://user-images.githubusercontent.com/30414428/126575229-84261cb2-2363-4917-943e-674c30b27e73.png)
+
 
 * Para resolver o problema dos objetos que tocam as bordas, foi realizada 4 iteracoes, sendo cada uma varrendo uma borda da imagem. 
 .* Se um pixel for "0", eh indicativo de que o objeto toca a borda. Portanto ele sera apagado usando floodfill com a cor do fundo.
@@ -144,6 +151,9 @@ Resultado:
       }
     }
 ```
+![Imagem_sem_bordas](https://user-images.githubusercontent.com/30414428/126575225-a516d184-9737-4878-90e9-a7352ccf8e94.png)
+
+
 * A contagem de objetos com e sem buraco seguira a logica: 
 .* Conta todos os objetos existentes;
 .* Conta os objetos com buracos;
@@ -166,6 +176,10 @@ Resultado:
     }
   }
 ```
+
+![Imagem_stodos](https://user-images.githubusercontent.com/30414428/126575250-7aabdcdf-eb31-43dc-9436-b5762cdcfee5.png)
+
+
 * Para contar os objetos com furos, a cor de fundo foi modificada. Isso fara com que os furos possuam cor diferente da cor de fundo atual. A partir disso, conta-se os objetos furados da imagem e pinta esses furos com a cor de fundo atual. Nao serao pintados os objetos em si pois eles ja o foram na etapa anterior, portanto nao influenciarao na contagem de furos existentes.
 
 ```
@@ -182,6 +196,10 @@ int nobjects_furos = 0;
     }
   }
 ```
+![Imagem_inverte](https://user-images.githubusercontent.com/30414428/126575294-e119e79d-7fc0-4bf0-b931-081e65afc3a0.png)
+
+A imagem aparenta nao ter buracos, mas observando com detalhes, os tons dos objetos nao sao exatamente 0, sao proximos. Apenas o furo eh 0. 
+
 * Por fim, subtrai-se o valor de numero de objetos total pelo numero de objetos furados
 
 ```
@@ -192,7 +210,10 @@ int nobjects_furos = 0;
 ```
 Resultado:
 
-(imagens)
+![Imagem_final](https://user-images.githubusercontent.com/30414428/126575358-08dec0c6-4c3a-42b3-aaea-282a5395a110.png)
+
+![Screenshot from 2021-07-21 21-14-11](https://user-images.githubusercontent.com/30414428/126575383-65358721-f40a-408f-9249-7a968cc8f58a.png)
+
 
 ## Questao 4
 **Utilizando o programa exemplos/histogram.cpp como referência, implemente um programa equalize.cpp. Este deverá, para cada imagem capturada, realizar a equalização do histogram antes de exibir a imagem. Teste sua implementação apontando a câmera para ambientes com iluminações variadas e observando o efeito gerado. Assuma que as imagens processadas serão em tons de cinza.**
@@ -224,7 +245,15 @@ cv::equalizeHist(img_cinza,img_cnz_eq);
 * Apos gerar-los basta seguir as etapas presentes em _histograma.cpp_ para mostrar-los na imagem coletada da camera.
 * Resultado:
 
-(imagens..)
+Ambiente Iluminado
+
+![Screenshot from 2021-07-21 21-21-34](https://user-images.githubusercontent.com/30414428/126575630-9043691d-3761-4e27-9e33-5a7a6939a3d1.png)
+
+Ambiente escuro
+
+![Screenshot from 2021-07-21 21-23-00](https://user-images.githubusercontent.com/30414428/126575642-d03b26d4-139a-4a65-b8ea-ffe7e5c664fd.png)
+
+
 
 ## Questao 4.2
 **Utilizando o programa exemplos/histogram.cpp como referência, implemente um programa motiondetector.cpp. Este deverá continuamente calcular o histograma da imagem (apenas uma componente de cor é suficiente) e compará-lo com o último histograma calculado. Quando a diferença entre estes ultrapassar um limiar pré-estabelecido, ative um alarme. Utilize uma função de comparação que julgar conveniente.**
@@ -295,7 +324,8 @@ if(correlacaoR <= threshold || correlacaoG <= threshold || correlacaoB <= thresh
 ```
 * Resultado:
 
-(imagens)
+![Screenshot from 2021-07-21 21-26-16](https://user-images.githubusercontent.com/30414428/126575891-f090107e-2671-4801-95a6-a30436205850.png)
+![Screenshot from 2021-07-21 21-26-59](https://user-images.githubusercontent.com/30414428/126575894-9f07f9ba-ed61-490f-976f-31b58054d8f9.png)
 
 
 ## Questao 5
@@ -372,8 +402,15 @@ if(laplgauss == 1){  //se for o laplgauss, ira realizar o gaussiano e depois o l
 
 * Resultado :
 
-(imagens)
+Apenas uso do Laplaciano:
 
+![Screenshot from 2021-07-21 21-30-04](https://user-images.githubusercontent.com/30414428/126576066-9d9ea825-e24b-4182-9455-16545b7e0c62.png)
+
+Uso do Gaussiano e, em seguida o Laplaciano
+
+![Screenshot from 2021-07-21 21-30-14](https://user-images.githubusercontent.com/30414428/126576083-dad73c9f-ba04-42dc-9cfa-f1cdee2017fe.png)
+
+Nota-se que, apesar da intensidade das linhas do Gaussiano-Laplaciano ser menor que apenas Laplaciano, essa combinacao produz um contorno com menos barulho, trabalhando apenas com as bordas mais intensas.
 
 ## Questao 6.1
 **Utilizando o programa exemplos/addweighted.cpp como referência, implemente um programa tiltshift.cpp. Três ajustes deverão ser providos na tela da interface:**
@@ -545,7 +582,14 @@ void on_trackbar_d(int, void*){
 
 * Resultado final:
 
-(imagens...)
+Imagem Original e Borrada
+
+![Screenshot from 2021-07-21 21-36-00](https://user-images.githubusercontent.com/30414428/126576377-0e5ce239-dc52-4d25-9822-e1498406373f.png)
+
+Imagem com tiltshift
+
+![Screenshot from 2021-07-21 21-36-00 (copy)](https://user-images.githubusercontent.com/30414428/126576380-4d6b3bb5-e092-4f06-9901-0ab8c9d1db13.png)
+
 
 
 ## Questao 6.2 
