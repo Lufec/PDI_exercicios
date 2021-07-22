@@ -588,8 +588,7 @@ Imagem Original e Borrada
 
 Imagem com tiltshift
 
-![Screenshot from 2021-07-21 21-36-00 (copy)](https://user-images.githubusercontent.com/30414428/126576380-4d6b3bb5-e092-4f06-9901-0ab8c9d1db13.png)
-
+![Screenshot from 2021-07-21 21-36-00 (copy)](https://user-images.githubusercontent.com/30414428/126576439-0f1e214b-8732-4162-a0a8-b387f778a215.png)
 
 
 ## Questao 6.2 
