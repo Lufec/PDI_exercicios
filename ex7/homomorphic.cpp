@@ -41,10 +41,10 @@ int main(int argc, char** argv) {
   cv::Mat backgroundImage;
   std::vector<cv::Mat> planos;
   float gammaH, gammaL,C,D,D0;
-  gammaH = 2.0;
-  gammaL = 0.25;
-  C = 1.0 ;
-  D0 = 80;	
+  gammaH = 1.75;
+  gammaL = 0.63;
+  C = 1.5 ;
+  D0 = 90;	
 	
 	
   // valores ideais dos tamanhos da imagem
