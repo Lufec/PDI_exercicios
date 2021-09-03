@@ -923,4 +923,8 @@ Imagem utilizada:
 
 Resultado das 10 rodadas:
 
+![ex9](https://user-images.githubusercontent.com/30414428/132029496-a6b340d6-c079-4df9-904d-aed3fdf1ff09.jpg)
 
+Essa diferença surge por dois motivos combinados: 
+1) Que os centros do KMeans são gerados em posiçõs aleatórias. Isso pode acarretar nos agrupamentos serem diferentes entre si em cada execução, a depender da imagem escolhida.
+2) Por realizar apenas 1 rodada, ele não tem outras rodadas para comparar e decidir a distribuição que mais ocorreu na imagem. É apenas a uma rodada e o resultado encontrado é o resultado final.
