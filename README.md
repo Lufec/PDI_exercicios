@@ -761,10 +761,153 @@ Na main:
 
 **Descreva no seu relatório detalhes do procedimento usado para criar sua técnica pontilhista.
 
+1) Primeiro, foi realizada a leitura da imagem, definição dos parametros de largura e altura;
+```
+  image= imread(argv[1],IMREAD_GRAYSCALE);
 
+  srand(time(0));
 
+  if(!image.data){
+	cout << "nao abriu" << argv[1] << endl;
+    cout << argv[0] << " imagem.jpg";
+    exit(0);
+  }
 
+  width=image.size().width;
+  height=image.size().height;
+```
 
+2) Em segui, foi realizado o procedimento de pontilhar a imagem, seguindo o exemplo do arquivo pontilhismo.cpp
+
+```
+  xrange.resize(height/STEP);
+  yrange.resize(width/STEP);
+
+  iota(xrange.begin(), xrange.end(), 0);
+  iota(yrange.begin(), yrange.end(), 0);
+
+  for(uint i=0; i<xrange.size(); i++){
+    xrange[i]= xrange[i]*STEP+STEP/2;
+  }
+
+  for(uint i=0; i<yrange.size(); i++){
+    yrange[i]= yrange[i]*STEP+STEP/2;
+  }
+
+  points = Mat(height, width, CV_8U, Scalar(255));
+
+  random_shuffle(xrange.begin(), xrange.end());
+
+  for(auto i : xrange){
+    random_shuffle(yrange.begin(), yrange.end());
+    for(auto j : yrange){
+      x = i+rand()%(2*JITTER)-JITTER+1;
+      y = j+rand()%(2*JITTER)-JITTER+1;
+      gray = image.at<uchar>(x,y);
+      circle(points,
+             cv::Point(y,x),
+             RAIO,
+             CV_RGB(gray,gray,gray),
+             -1,
+             LINE_AA);
+    }
+  }
+  imshow("ponts",points);
+  imwrite("pontos.jpg", points);
+```
+3) Agora com a imagem pontilhada, foi definida uma estratégia para preencher os espaços em branco.
+
+Ela consiste em aplicar a técnica de detector de bordas de Canny com certos parâmetros e desenhar nos pontos de contorno um círculo. Esse procedimento foi repetido 4 vezes, onde cada uma possuiu parâmetros de Canny que identificavam com mais detalhes as bordas existentes. Nas 4 aplicações, o tamanho do raio do círculo desenhado diminuiu, dado o objetivo de preencher apenas os espaços em branco.
+
+```
+Canny(points, border, 200, 600);
+ 
+ imwrite("canny1.jpg",border);
+ 
+ for(int i = 0;i<height;i++){
+    for(int j = 0;j<width;j++){
+      canny_cor = border.at<uchar>(i,j);
+      if(canny_cor == 255){
+	      gray = image.at<uchar>(i,j);
+	      circle(points,
+	      cv::Point(j,i),
+	      3,
+	      CV_RGB(gray,gray,gray),
+	      -1,
+	      LINE_AA);
+      }
+    }
+  }
+  
+ Canny(points, border, 100, 300);
+ 
+ imwrite("canny2.jpg",border);
+ for(int i = 0;i<height;i++){
+    for(int j = 0;j<width;j++){
+      canny_cor = border.at<uchar>(i,j);
+      if(canny_cor == 255){
+	      gray = image.at<uchar>(i,j);
+	      circle(points,
+	      cv::Point(j,i),
+	      2,
+	      CV_RGB(gray,gray,gray),
+	      -1,
+	      LINE_AA);
+      }
+    }
+  }
+  
+  
+ Canny(points, border, 50, 150);
+ 
+ imwrite("canny3.jpg",border);
+ for(int i = 0;i<height;i++){
+    for(int j = 0;j<width;j++){
+      canny_cor = border.at<uchar>(i,j);
+      if(canny_cor == 255){
+	      gray = image.at<uchar>(i,j);
+	      circle(points,
+	      cv::Point(j,i),
+	      1,
+	      CV_RGB(gray,gray,gray),
+	      -1,
+	      LINE_AA);
+      }
+    }
+  }
+   
+ Canny(points, border, 20, 60);
+ 
+ imwrite("canny4.jpg",border);
+ for(int i = 0;i<height;i++){
+    for(int j = 0;j<width;j++){
+      canny_cor = border.at<uchar>(i,j);
+      if(canny_cor == 255){
+	      gray = image.at<uchar>(i,j);
+	      circle(points,
+	      cv::Point(j,i),
+	      1,
+	      CV_RGB(gray,gray,gray),
+	      -1,
+	      LINE_AA);
+      }
+    }
+  }
+
+```
+Por fim, obteve-se a imagem pontilhada preenchida.
+
+Imagem original:
+
+![berserk](ex8/berserk.jpg)
+
+Imagem pontilhada:
+
+![berserk2](ex8/pontos.jpg)
+
+Imagem preenchida:
+
+![berserk2](ex8/cannyborders.jpg)
 
 
 ## Questão 9
