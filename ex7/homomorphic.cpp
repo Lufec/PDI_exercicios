@@ -4,6 +4,19 @@
 
 #define RADIUS 20
 
+  cv::Mat imaginaryInput, complexImage, multsp;
+  cv::Mat padded, filter, mag, imFiltrado;
+  cv::Mat image, imagegray, tmp, magI;
+  cv::Mat_<float> realInput, log_realInput, zeros, exp_idft, ones;
+  cv::Mat backgroundImage;
+  std::vector<cv::Mat> planos;
+
+  int gammaL_slider = 2, gammaH_slider = 20, C_slider = 1, D0_slider = 5;
+  const int gammaL_max = 10, gammaH_max = 50, C_max = 100, D0_max = 200;
+  double gammaL, gammaH,C,D0;
+  
+  int dft_M, dft_N;
+
 // troca os quadrantes da imagem da DFT
 void deslocaDFT(cv::Mat& image) {
   cv::Mat tmp, A, B, C, D;
@@ -33,42 +46,11 @@ void deslocaDFT(cv::Mat& image) {
   tmp.copyTo(B);
 }
 
-int main(int argc, char** argv) {
-  cv::Mat imaginaryInput, complexImage, multsp;
-  cv::Mat padded, filter, mag;
-  cv::Mat image, imagegray, tmp, magI;
-  cv::Mat_<float> realInput, log_realInput, zeros, exp_idft, ones;
-  cv::Mat backgroundImage;
-  std::vector<cv::Mat> planos;
-  float gammaH, gammaL,C,D,D0;
-  gammaH = 1.75;
-  gammaL = 0.63;
-  C = 1.5 ;
-  D0 = 90;	
-	
-	
-  // valores ideais dos tamanhos da imagem
-  // para calculo da DFT
-  int dft_M, dft_N;
 
-
-  image = cv::imread(argv[1],cv::IMREAD_GRAYSCALE); 
-  
-  cv::imshow("imagem original", image);
-  cv::waitKey();    
-  // identifica os tamanhos otimos para
-  // calculo do FFT
-  dft_M = cv::getOptimalDFTSize(image.rows);
-  dft_N = cv::getOptimalDFTSize(image.cols);
-
-  // realiza o padding da imagem
-  cv::copyMakeBorder(image, padded, 0, dft_M - image.rows, 0,
-                     dft_N - image.cols, cv::BORDER_CONSTANT,
-                     cv::Scalar::all(0));
-
-  // parte imaginaria da matriz complexa (preenchida com zeros)
-  zeros = cv::Mat_<float>::zeros(padded.size());
-  ones = cv::Mat_<float>::zeros(padded.size());
+void filtragem(){
+    // parte imaginaria da matriz complexa (preenchida com zeros)
+     zeros = cv::Mat_<float>::zeros(padded.size());
+    ones = cv::Mat_<float>::zeros(padded.size());
 
     // prepara a matriz complexa para ser preenchida
     complexImage = cv::Mat(padded.size(), CV_32FC2, cv::Scalar(0));
@@ -106,7 +88,7 @@ int main(int argc, char** argv) {
     // cria uma matriz temporária para criar as componentes real
     // e imaginaria do filtro passa alta gaussiano
     tmp = cv::Mat(dft_M, dft_N, CV_32F);
-
+    float D;
     // prepara o filtro passa-alta ideal
     for (int i = 0; i < dft_M; i++) {
       for (int j = 0; j < dft_N; j++) {
@@ -139,9 +121,55 @@ int main(int argc, char** argv) {
     cv::exp(planos[0],planos[0]);
     // normaliza a parte real para exibicao
     cv::normalize(planos[0], planos[0], 0, 1, cv::NORM_MINMAX);
-    cv::imshow("filtrada", planos[0]);
-    cv::waitKey();
+    imFiltrado = planos[0].clone();
+}
 
+
+void on_trackbar(int, void*){
+  gammaL = (double) gammaL_slider/10;
+  gammaH = (double) gammaH_slider/10;
+  C = (double) C_slider;
+  D0 = (double) D0_slider;
+  filtragem();
+  cv::imshow("Homomorphic",imFiltrado);
+}
+
+
+int main(int argc, char** argv) {
+	
+  // valores ideais dos tamanhos da imagem
+  // para calculo da DFT
+
+
+  image = cv::imread(argv[1],cv::IMREAD_GRAYSCALE); 
   
+  cv::namedWindow("Homomorphic",cv::WINDOW_NORMAL);
+  cv::imshow("Original",image);
+  cv::waitKey();    
+  // identifica os tamanhos otimos para
+  // calculo do FFT
+  dft_M = cv::getOptimalDFTSize(image.rows);
+  dft_N = cv::getOptimalDFTSize(image.cols);
+
+  // realiza o padding da imagem
+  cv::copyMakeBorder(image, padded, 0, dft_M - image.rows, 0,
+                     dft_N - image.cols, cv::BORDER_CONSTANT,
+                     cv::Scalar::all(0));
+
+  char TrackbarName[50]; 
+  
+  sprintf( TrackbarName, "Gamma L x %d", gammaL_max );
+  cv::createTrackbar( TrackbarName, "Homomorphic", &gammaL_slider, gammaL_max, on_trackbar);
+
+  sprintf( TrackbarName, "Gamma H x %d", gammaH_max );
+  cv::createTrackbar( TrackbarName, "Homomorphic", &gammaH_slider, gammaH_max, on_trackbar);
+
+  sprintf( TrackbarName, "C x %d", C_max );
+  cv::createTrackbar( TrackbarName, "Homomorphic", &C_slider, C_max, on_trackbar);
+
+  sprintf( TrackbarName, "D0 x %d", D0_max );
+  cv::createTrackbar( TrackbarName, "Homomorphic", &D0_slider, D0_max, on_trackbar);
+  //on_trackbar(0,0);
+  cv::waitKey(0);
   return 0;
 }
