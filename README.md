@@ -774,3 +774,6 @@ Imagem utilizada:
 
 ![sushi](ex9/sushi.jpg)
 
+Resultado das 10 rodadas:
+
+
