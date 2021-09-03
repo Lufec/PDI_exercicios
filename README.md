@@ -746,7 +746,7 @@ Na main:
 
 Imagem original: 
 
-![cave](cave.jpg)
+![cave](ex7/cave.jpg)
 
 Imagem filtrada com os trackbares em uso:
 
