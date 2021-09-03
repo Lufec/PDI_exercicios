@@ -596,3 +596,179 @@ Imagem com tiltshift
 **Utilizando o programa exemplos/addweighted.cpp como referência, implemente um programa tiltshiftvideo.cpp. Tal programa deverá ser capaz de processar um arquivo de vídeo, produzir o efeito de tilt-shift nos quadros presentes e escrever o resultado em outro arquivo de vídeo. A ideia é criar um efeito de miniaturização de cenas. Descarte quadros em uma taxa que julgar conveniente para evidenciar o efeito de stop motion, comum em vídeos desse tipo.
 
 Nao realizada.
+
+
+## Questão 7
+**Utilizando o programa exemplos/dft.cpp como referência, implemente o filtro homomórfico para melhorar imagens com iluminação irregular. Crie uma cena mal iluminada e ajuste os parâmetros do filtro homomórfico para corrigir a iluminação da melhor forma possível. Assuma que a imagem fornecida é em tons de cinza.
+
+Primeira parte: ler a imagem e realizar um padding de 0's a partir do tamanho definido pelas funções getOptimalDFTSize
+
+```
+  image = cv::imread(argv[1],cv::IMREAD_GRAYSCALE); 
+  
+  cv::namedWindow("Homomorphic",cv::WINDOW_NORMAL);
+  cv::imshow("Original",image);
+  cv::waitKey();    
+  // identifica os tamanhos otimos para
+  // calculo do FFT
+  dft_M = cv::getOptimalDFTSize(image.rows);
+  dft_N = cv::getOptimalDFTSize(image.cols);
+
+  // realiza o padding da imagem
+  cv::copyMakeBorder(image, padded, 0, dft_M - image.rows, 0,
+                     dft_N - image.cols, cv::BORDER_CONSTANT,
+                     cv::Scalar::all(0));
+```
+
+Segundo: Preparar as funções que irão trabalhar na imagem
+
+```
+    // parte imaginaria da matriz complexa (preenchida com zeros)
+    zeros = cv::Mat_<float>::zeros(padded.size());
+    ones = cv::Mat_<float>::zeros(padded.size());
+
+    // prepara a matriz complexa para ser preenchida
+    complexImage = cv::Mat(padded.size(), CV_32FC2, cv::Scalar(0));
+
+    // limpa o array de matrizes que vao compor a
+    // imagem complexa
+    planos.clear();
+    // cria a compoente real
+    realInput = cv::Mat_<float>(padded);
+    
+    
+    //log
+    realInput += cv::Scalar::all(1);
+    cv::log(realInput,realInput);
+    
+    // insere as duas componentes no array de matrizes
+    planos.push_back(realInput);
+    planos.push_back(zeros);
+
+    // combina o array de matrizes em uma unica
+    // componente complexa
+    cv::merge(planos, complexImage);    
+```
+
+Terceiro: Aplica a dft e funções preparativas
+
+```
+    // calcula o dft
+    cv::dft(complexImage, complexImage);
+    // realiza a troca de quadrantes
+    deslocaDFT(complexImage);
+    cv::resize(complexImage,complexImage,padded.size());
+    cv::normalize(complexImage,complexImage,0,1,cv::NORM_MINMAX);
+
+    // a função de transferencia (filtro de frequencia) deve ter o
+    // mesmo tamanho e tipo da matriz complexa
+    filter = complexImage.clone();
+
+    // cria uma matriz temporária para criar as componentes real
+    // e imaginaria do filtro passa alta gaussiano
+    tmp = cv::Mat(dft_M, dft_N, CV_32F);
+
+```
+Quarto: Cria o filtro passa-alta, seguindo a fórmula:
+(inserir formula)
+
+A partir dos valores selecionados nas trackbar's, ele é aplicado na imagem transformada.
+
+```
+ float D;
+    // prepara o filtro passa-alta ideal
+    for (int i = 0; i < dft_M; i++) {
+      for (int j = 0; j < dft_N; j++) {
+        D = (i-dft_M/2)*(i-dft_M/2) + (j-dft_N/2)*(j-dft_N/2);
+        tmp.at<float>(i,j) = (gammaH - gammaL)*(1 - exp(-C*( D / (D0*D0) ))) + gammaL; 
+      }
+    }
+    // cria a matriz com as componentes do filtro e junta
+    // ambas em uma matriz multicanal complexa
+    cv::Mat comps[] = {tmp, tmp};
+    cv::merge(comps, 2, filter); 
+    
+    // aplica o filtro de frequencia
+    cv::mulSpectrums(complexImage, filter, complexImage, 0);
+
+    // troca novamente os quadrantes
+    deslocaDFT(complexImage);
+```
+Quinto: Aplica a transformada inversa e aplica a exponenciação e normalização para obter a imagem final.
+
+
+```
+    // calcula a DFT inversa
+    cv::idft(complexImage, complexImage);
+
+    // limpa o array de planos
+    planos.clear();
+
+    // separa as partes real e imaginaria da
+    // imagem filtrada
+    cv::split(complexImage, planos);
+    
+    cv::exp(planos[0],planos[0]);
+    // normaliza a parte real para exibicao
+    cv::normalize(planos[0], planos[0], 0, 1, cv::NORM_MINMAX);
+    imFiltrado = planos[0].clone();
+```
+
+Sexto: Para aplicar dinamicamente a filtragem, foram geradas funções de Slider e uso de trackbar's.
+
+```
+void on_trackbar(int, void*){
+  gammaL = (double) gammaL_slider/10;
+  gammaH = (double) gammaH_slider/10;
+  C = (double) C_slider;
+  D0 = (double) D0_slider;
+  filtragem();
+  cv::imshow("Homomorphic",imFiltrado);
+}
+```
+
+Na main:
+```
+
+  sprintf( TrackbarName, "Gamma L x %d", gammaL_max );
+  cv::createTrackbar( TrackbarName, "Homomorphic", &gammaL_slider, gammaL_max, on_trackbar);
+
+  sprintf( TrackbarName, "Gamma H x %d", gammaH_max );
+  cv::createTrackbar( TrackbarName, "Homomorphic", &gammaH_slider, gammaH_max, on_trackbar);
+
+  sprintf( TrackbarName, "C x %d", C_max );
+  cv::createTrackbar( TrackbarName, "Homomorphic", &C_slider, C_max, on_trackbar);
+
+  sprintf( TrackbarName, "D0 x %d", D0_max );
+  cv::createTrackbar( TrackbarName, "Homomorphic", &D0_slider, D0_max, on_trackbar);
+
+```
+
+
+
+
+
+## Questão 8
+**Utilizando os programas exemplos/canny.cpp e exemplos/pontilhismo.cpp como referência, implemente um programa cannypoints.cpp. A idéia é usar as bordas produzidas pelo algoritmo de Canny para melhorar a qualidade da imagem pontilhista gerada. A forma como a informação de borda será usada é livre. Entretanto, são apresentadas algumas sugestões de técnicas que poderiam ser utilizadas:
+
+**Desenhar pontos grandes na imagem pontilhista básica;
+
+**Usar a posição dos pixels de borda encontrados pelo algoritmo de Canny para desenhar pontos nos respectivos locais na imagem gerada.
+
+**Experimente ir aumentando os limiares do algoritmo de Canny e, para cada novo par de limiares, desenhar círculos cada vez menores nas posições encontradas. A Figura 19 foi desenvolvida usando essa técnica.
+
+**Escolha uma imagem de seu gosto e aplique a técnica que você desenvolveu.
+
+**Descreva no seu relatório detalhes do procedimento usado para criar sua técnica pontilhista.
+
+
+
+
+
+
+
+## Questão 9
+**Utilizando o programa kmeans.cpp como exemplo prepare um programa exemplo onde a execução do código se dê usando o parâmetro nRodadas=1 e inciar os centros de forma aleatória usando o parâmetro KMEANS_RANDOM_CENTERS ao invés de KMEANS_PP_CENTERS. Realize 10 rodadas diferentes do algoritmo e compare as imagens produzidas. Explique porque elas podem diferir tanto.
+
+
+
